@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RL project information!</title>
+</head>
+
+<body>
+    <h1>Ionic thruster boat: </h1>
+    <h2>flow chart for the code: </h2>
+    <img src="arduino_ionic_boat_flowchart.png" alt="flow chart" height="900">
+    <br>
+    <b>observe it carefully </b>
+    <br>
+    <hr>
+    <h2>Now the program: </h2>
+    <pre>
+// Boat ionic thruster control
+// A2 -> pin 7 (right thruster)
+// A1 -> pin 6 (left thruster)
+        
+const A1 = 6;
+const A2 = 7;
+
+int pwmValue = 255; // default full-power (0-255)
+
+void setup() {
+  pinMode(A1, OUTPUT);
+  pinMode(A2, OUTPUT);
+  digitalWrite(A1, LOW);
+  digitalWrite(A2, LOW);
+  Serial.begin(9600); // HC-05 default
+  Serial.println("Boat control ready");
+}
+
+void loop() {
+  if (Serial.available()) {
+    String in = Serial.readStringUntil('\n');
+    in.trim();
+    if (in.length() == 0) return;
+
+    // Single char commands
+    if (in == "0") { // Stop
+      stopAll();
+      Serial.println("STOP");
+    }
+    else if (in == "1") { // A1 ON (left thruster)
+      setA1(true); setA2(false);
+      Serial.println("A1_ON -> TURN RIGHT");
+    }
+    else if (in == "2") { // A2 ON (right thruster)
+      setA1(false); setA2(true);
+      Serial.println("A2_ON -> TURN LEFT");
+    }
+    else if (in == "F" || in == "f") { // Forward
+      setA1(true); setA2(true);
+      Serial.println("FORWARD");
+    }
+    else if (in == "R" || in == "r") { // Turn Right
+      setA1(true); setA2(false);
+      Serial.println("RIGHT");
+    }
+    else if (in == "L" || in == "l") { // Turn Left
+      setA1(false); setA2(true);
+      Serial.println("LEFT");
+    }
+    // PWM set command: Pxxx (e.g. P128)
+    else if (in.charAt(0) == 'P' || in.charAt(0) == 'p') {
+      int v = in.substring(1).toInt();
+      v = constrain(v, 0, 255);
+      pwmValue = v;
+      Serial.print("PWM set to ");
+      Serial.println(pwmValue);
+      // If currently ON, update analogWrite outputs to reflect new pwm
+      // Note: If using MOSFET switching an enable pin that doesn't accept PWM,
+      // don't use PWM through that pin. Only PWM if your HV module supports it.
+      if (isAnyThrusterOn()) {
+        applyPWMState();
+      }
+    }
+    else {
+      Serial.print("Unknown cmd: ");
+      Serial.println(in);
+    }
+  }
+}
+
+void stopAll() {
+  analogWrite(A1, 0);
+  analogWrite(A2, 0);
+}
+
+void setA1(bool on) {
+  if (on) analogWrite(A1, pwmValue);
+  else analogWrite(A1, 0);
+}
+
+void setA2(bool on) {
+  if (on) analogWrite(A2, pwmValue);
+  else analogWrite(A2, 0);
+}
+
+bool isAnyThrusterOn() {
+  // heuristic: read PWM value on pins (not direct read) — keep a simple state map if needed
+  // for simplicity we assume pwmValue > 0 implies possible ON; you can extend with state variables.
+  return (digitalRead(A1) == HIGH || digitalRead(A2) == HIGH);
+}
+
+void applyPWMState() {
+  // Re-apply PWM to pins based on current digital state
+  // (If digitalRead doesn't work reliably for PWM, maintain state vars instead)
+  if (digitalRead(A1) == HIGH) analogWrite(A1, pwmValue);
+  if (digitalRead(A2) == HIGH) analogWrite(A2, pwmValue);
+}
+
+    </pre>
+    <hr>
+    <h2>This is the circuit diagram: </h2>
+    <img src="WhatsApp Image 2025-09-14 at 13.31.22_b12ec97e.jpg" alt="diagram">
+    <br>
+    <hr>
+    <h2>The materials required are: </h2>
+    <ol>
+        <li>Arduino uno</li>
+        <li>HC - 05</li>
+        <li>MOSFET</li>
+        <LI>HV generator</LI>
+        <li>Breadboard</li>
+        <li>1kΩ resistor</li>
+        <li>2kΩ resistor</li>
+        <li>100kΩ resistor</li>
+        <li>Jumper wire</li>
+        <li>Raft (wooden,plastic,thermacol)</li>
+        <li>water proof covering (plastic)</li>
+        <li>laptop, PC or moblie </li>
+        <li>9V lipo battery</li>
+    </ol>
+    <br>
+    <hr>
+    <h2>now the placement of the equipments:</h2>
+    <img src="iONIC THURSTUR BOAT.png" alt="rough diagram" height="500">
+    <br>
+    <hr>
+    <h2>Working of the program: </h2>
+    <img src="IONIC THRUSTER SETUP (ITS 1).png" alt="WORKING" height="400">
+    <p>
+        when A1 and A2 are on the boat moves forward but when A1 is on A2 is off the boat truns left and when A1 is off and A2 is on the boat truns right and when A1 and A2 both are off the boat stops
+    </p>
+</body>
+</html>
